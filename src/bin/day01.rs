@@ -1,7 +1,11 @@
+use std::time::Instant;
+
 fn main() {
     let input = include_str!("../../inputs/01.in");
+    let start = Instant::now();
     let (pt1, pt2) = run(&input);
-    println!("pt1: {}, pt2: {}", pt1, pt2);
+    let elapsed = Instant::now() - start;
+    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
 }
 
 fn run(input: &str) -> (u64, u64) {
@@ -21,11 +25,14 @@ fn run(input: &str) -> (u64, u64) {
         .map(|(l, r)| (l - r).abs() as u64)
         .sum();
 
-    let pt2: u64 = left.iter().map(|l| {
-        let count = right.iter().filter(|r| *r == l).count();
-        *l as u64 * count as u64
-    }).sum();
-    
+    let pt2: u64 = left
+        .iter()
+        .map(|l| {
+            let count = right.iter().filter(|r| *r == l).count();
+            *l as u64 * count as u64
+        })
+        .sum();
+
     (pt1, pt2)
 }
 
