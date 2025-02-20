@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use std::{collections::HashSet, fmt::Display, time::Instant};
 
 fn main() {
@@ -224,8 +225,14 @@ fn run(input: &str) -> (u64, u64) {
     possible_obstacle_locations.remove(&initial_grid_state.guard_position);
     let possible_obstacle_locations = possible_obstacle_locations; // no longer needs to be mutable
 
-    let pt2 = possible_obstacle_locations
+    // To parallelise calculations, we need a vec rather than a hashset
+    let possible_locations_vec: Vec<(usize, usize)> = possible_obstacle_locations
         .iter()
+        .map(|item| *item)
+        .collect();
+
+    let pt2 = possible_locations_vec
+        .into_par_iter()
         .filter(|(x, y)| {
             // Create a new grid and insert the obstacle
             let mut gs = initial_grid_state.clone();
