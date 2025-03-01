@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::HashSet, time::Instant};
 
 fn main() {
     let input = include_str!("../../inputs/14.in");
@@ -61,6 +61,39 @@ fn count_positions_in_range(
         .sum()
 }
 
+fn display_robots(positions: &Vec<(isize, isize)>) {
+    let mut minx = isize::MAX;
+    let mut miny = isize::MAX;
+    let mut maxx = 0;
+    let mut maxy = 0;
+
+    for pos in positions.iter() {
+        if pos.0 < minx {
+            minx = pos.0;
+        }
+        if pos.0 > maxx {
+            maxx = pos.0;
+        }
+        if pos.1 < miny {
+            miny = pos.1;
+        }
+        if pos.1 > maxy {
+            maxy = pos.1;
+        }
+    }
+
+    for y in miny..maxy + 1 {
+        for x in minx..maxx + 1 {
+            if positions.iter().any(|pos| pos.0 == x && pos.1 == y) {
+                print!("#");
+            } else {
+                print!(" ");
+            }
+        }
+        print!("\n");
+    }
+}
+
 fn run_inner(input: &str, steps: isize, bounds: (isize, isize)) -> (u64, u64) {
     let robots: Vec<Robot> = input.trim().lines().map(|line| Robot::from(line)).collect();
 
@@ -83,7 +116,24 @@ fn run_inner(input: &str, steps: isize, bounds: (isize, isize)) -> (u64, u64) {
 
     let pt1: u64 = quadrant_counts.iter().product();
 
-    (pt1, 0)
+    // Part 2 is a weird one. We don't actually know the image that we are looking for. There's
+    // a variety of heuristics that we could use, but ultimately we have to print out the layout
+    // and confirm if we were right or not. It's probably fair to assume that the image won't have
+    // overlapping robots since these would not add to the image. So try that first.
+    let mut pt2 = 0u64;
+    for i in 1.. {
+        let end_positions: Vec<(isize, isize)> =
+            robots.iter().map(|r| r.step_by(i, bounds)).collect();
+
+        if end_positions.len() == HashSet::<&(isize, isize)>::from_iter(end_positions.iter()).len()
+        {
+            display_robots(&end_positions);
+            pt2 = i as u64;
+            break;
+        }
+    }
+
+    (pt1, pt2)
 }
 
 fn run(input: &str) -> (u64, u64) {
