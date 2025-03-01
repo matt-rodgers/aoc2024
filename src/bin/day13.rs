@@ -11,7 +11,11 @@ fn main() {
 
 const TOKENS_A: u64 = 3;
 const TOKENS_B: u64 = 1;
-const FLOAT_EQUAL_MARGIN: f64 = 0.000_001;
+const PT2_OFFSET: isize = 10000000000000;
+
+// Note that the answer for pt2 is quite sensitive to the floating point precision we decide on
+// here. Empirically, 0.001 seems about right (reducing it further doesn't change the answer).
+const FLOAT_EQUAL_MARGIN: f64 = 0.001;
 
 type Xy = (isize, isize);
 
@@ -133,7 +137,18 @@ fn run(input: &str) -> (u64, u64) {
 
     let pt1: u64 = machines.iter().filter_map(|m| m.min_cost()).sum();
 
-    (pt1, 0)
+    let machines_pt2: Vec<Machine> = machines
+        .iter()
+        .map(|m| {
+            let mut machine = m.clone();
+            machine.prize = (machine.prize.0 + PT2_OFFSET, machine.prize.1 + PT2_OFFSET);
+            machine
+        })
+        .collect();
+
+    let pt2: u64 = machines_pt2.iter().filter_map(|m| m.min_cost()).sum();
+
+    (pt1, pt2)
 }
 
 #[cfg(test)]
@@ -145,6 +160,5 @@ mod test {
         let input = include_str!("../../inputs/13.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 480);
-        assert_eq!(pt2, 0);
     }
 }
