@@ -1,4 +1,4 @@
-use std::{fmt::Display, panic::Location, time::Instant};
+use std::{fmt::Display, time::Instant};
 
 fn main() {
     let input = include_str!("../../inputs/15.in");
@@ -39,6 +39,8 @@ enum GridElement {
     Free,
     Box,
     Robot,
+    BoxL,
+    BoxR,
 }
 
 impl TryFrom<char> for GridElement {
@@ -50,6 +52,8 @@ impl TryFrom<char> for GridElement {
             '.' => Ok(GridElement::Free),
             'O' => Ok(GridElement::Box),
             '@' => Ok(GridElement::Robot),
+            '[' => Ok(GridElement::BoxL),
+            ']' => Ok(GridElement::BoxR),
             _ => Err(MyError),
         }
     }
@@ -62,6 +66,8 @@ impl Into<char> for GridElement {
             GridElement::Free => '.',
             GridElement::Robot => '@',
             GridElement::Box => 'O',
+            GridElement::BoxL => '[',
+            GridElement::BoxR => ']',
         }
     }
 }
@@ -126,11 +132,26 @@ impl Grid {
         let current_element = self.elements[y][x];
         let next_element = self.elements[ny][nx];
 
-        let res = match next_element {
-            GridElement::Wall => return Err(MyError),
-            GridElement::Free => Ok(()),
-            GridElement::Box => self.apply_move_inner((nx, ny), mv),
-            GridElement::Robot => panic!("Multiple robots in grid!"),
+        let res = match (next_element, mv) {
+            (GridElement::Wall, _) => return Err(MyError),
+            (GridElement::Free, _) => Ok(()),
+            (GridElement::Robot, _) => panic!("Multiple robots in grid!"),
+            (GridElement::BoxL | GridElement::BoxR, Move::Up | Move::Down) => {
+                let offset: isize = if next_element == GridElement::BoxL {
+                    1
+                } else {
+                    -1
+                };
+
+                let r1 = self.apply_move_inner((nx, ny), mv);
+                let r2 = self.apply_move_inner(((nx as isize + offset) as usize, ny), mv);
+
+                match (r1, r2) {
+                    (Ok(_), Ok(_)) => Ok(()),
+                    _ => Err(MyError),
+                }
+            }
+            (_, _) => self.apply_move_inner((nx, ny), mv),
         };
 
         // Element at current location might not actually end up free. But if this is the case it
@@ -160,7 +181,7 @@ impl Grid {
             .enumerate()
             .map(|(y, line)| {
                 line.iter().enumerate().filter_map(move |(x, ge)| {
-                    if let GridElement::Box = ge {
+                    if let GridElement::Box | GridElement::BoxL = ge {
                         Some((100 * y + x) as u64)
                     } else {
                         None
@@ -169,6 +190,29 @@ impl Grid {
             })
             .flatten()
             .sum()
+    }
+
+    fn expanded(&self) -> Self {
+        let new_elements: Vec<Vec<GridElement>> = self
+            .elements
+            .iter()
+            .map(|line| {
+                line.iter()
+                    .flat_map(|ge| match ge {
+                        GridElement::Wall => vec![GridElement::Wall, GridElement::Wall],
+                        GridElement::Free => vec![GridElement::Free, GridElement::Free],
+                        GridElement::Robot => vec![GridElement::Robot, GridElement::Free],
+                        GridElement::Box => vec![GridElement::BoxL, GridElement::BoxR],
+                        _ => panic!("Cannot expand an already expanded grid"),
+                    })
+                    .collect()
+            })
+            .collect();
+
+        Self {
+            elements: new_elements,
+            robot_loc: (self.robot_loc.0 * 2, self.robot_loc.1),
+        }
     }
 }
 
@@ -188,7 +232,14 @@ fn run(input: &str) -> (u64, u64) {
 
     let pt1 = g.gps_score();
 
-    (pt1, 0)
+    let mut expanded_grid = grid.expanded();
+    for m in moves.iter() {
+        expanded_grid.apply_move(*m);
+    }
+
+    let pt2 = expanded_grid.gps_score();
+
+    (pt1, pt2)
 }
 
 #[cfg(test)]
@@ -200,14 +251,13 @@ mod test {
         let input = include_str!("../../inputs/15.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 10092);
-        assert_eq!(pt2, 0);
+        assert_eq!(pt2, 9021);
     }
 
     #[test]
     fn test_example_2() {
         let input = include_str!("../../inputs/15_2.ex");
-        let (pt1, pt2) = run(&input);
+        let (pt1, _pt2) = run(&input);
         assert_eq!(pt1, 2028);
-        assert_eq!(pt2, 0);
     }
 }
