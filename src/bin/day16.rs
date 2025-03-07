@@ -1,5 +1,9 @@
 use priority_queue::PriorityQueue;
-use std::{cmp::Reverse, time::Instant};
+use std::{
+    cmp::Reverse,
+    collections::{HashMap, HashSet},
+    time::Instant,
+};
 
 fn main() {
     let input = include_str!("../../inputs/16.in");
@@ -166,6 +170,7 @@ fn run(input: &str) -> (u64, u64) {
         })
         .collect();
     let mut visited: Vec<(Node, usize)> = Vec::new();
+    let mut prev: HashMap<Node, Vec<Node>> = HashMap::new();
 
     while let Some((current, Reverse(cost))) = unvisited.pop() {
         // End condition of loop: we might not be able to visit all nodes, and need to break if the
@@ -178,7 +183,19 @@ fn run(input: &str) -> (u64, u64) {
             let new_cost = cost + additional_cost;
             if let Some(Reverse(existing_cost)) = unvisited.get_priority(&neighbor) {
                 if new_cost < *existing_cost {
+                    // Update the cost of this node
                     unvisited.change_priority(&neighbor, Reverse(new_cost));
+
+                    // Replace the existing previous node(s) of the unvisited node with the
+                    // current node
+                    prev.insert(neighbor, vec![current]);
+                } else if new_cost == *existing_cost {
+                    // If the cost is equal, append to the array of previous nodes (since there
+                    // is now more than one lowest-cost previous node)
+                    let p = prev
+                        .get_mut(&neighbor)
+                        .expect("Neighbor should already have an entry in prev");
+                    p.push(current);
                 }
             }
         }
@@ -190,15 +207,39 @@ fn run(input: &str) -> (u64, u64) {
     // have four end nodes (one for each direction we can face in), any of these is an acceptable
     // end point so check all of them for the min cost.
     let mut pt1 = usize::MAX;
+    let mut end_node: Option<Node> = None;
     for (node, cost) in visited.iter() {
         if (node.x, node.y) == end {
             if *cost < pt1 {
+                end_node = Some(*node);
                 pt1 = *cost;
             }
         }
     }
 
-    (pt1 as u64, 0)
+    // Traverse the map of previous nodes, starting from the end node until we get to the start
+    // node. We need to count up the nodes with unique locations (the same location but different
+    // direction does not count as an additional node on the best path)
+    let end_node = end_node.unwrap();
+    let mut pending_nodes: Vec<Node> = vec![end_node];
+    let mut best_path: HashSet<(isize, isize)> = HashSet::new();
+    best_path.insert((end_node.x, end_node.y));
+
+    while let Some(next) = pending_nodes.pop() {
+        let new_nodes = prev
+            .get(&next)
+            .expect("Any node in the pending list should have a previous node");
+        for node in new_nodes {
+            best_path.insert((node.x, node.y));
+            if *node != start_node {
+                pending_nodes.push(*node);
+            }
+        }
+    }
+
+    let pt2 = best_path.len() as u64;
+
+    (pt1 as u64, pt2)
 }
 
 #[cfg(test)]
@@ -212,7 +253,7 @@ mod test {
         let input = include_str!("../../inputs/16.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 7036);
-        assert_eq!(pt2, 0);
+        assert_eq!(pt2, 45);
     }
 
     #[test]
@@ -220,7 +261,7 @@ mod test {
         let input = include_str!("../../inputs/16_2.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 11048);
-        assert_eq!(pt2, 0);
+        assert_eq!(pt2, 64);
     }
 
     #[test]
