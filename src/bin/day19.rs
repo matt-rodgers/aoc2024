@@ -8,14 +8,14 @@ fn main() {
     println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
 }
 
-fn pattern_is_possible<'a>(
+fn pattern_count_combinations<'a>(
     pattern: &'a str,
     towels: &Vec<&str>,
-    cache: &mut HashMap<&'a str, bool>,
-) -> bool {
+    cache: &mut HashMap<&'a str, u64>,
+) -> u64 {
     // Recursion end condition
     if pattern.len() == 0 {
-        return true;
+        return 1;
     }
 
     // Check for result in cache first
@@ -23,20 +23,16 @@ fn pattern_is_possible<'a>(
         return *res;
     }
 
+    let mut combinations = 0;
     for towel in towels.iter() {
         if pattern.starts_with(towel) {
-            assert!(towel.len() > 0);
             let next_slice = &pattern[towel.len()..];
-
-            if pattern_is_possible(next_slice, towels, cache) {
-                cache.insert(pattern, true);
-                return true;
-            }
+            combinations += pattern_count_combinations(next_slice, towels, cache);
         }
     }
 
-    cache.insert(pattern, false);
-    return false;
+    cache.insert(pattern, combinations);
+    return combinations;
 }
 
 fn run(input: &str) -> (u64, u64) {
@@ -44,15 +40,21 @@ fn run(input: &str) -> (u64, u64) {
 
     let towels: Vec<&str> = towel_line.split(", ").collect();
 
-    let mut cache = HashMap::<&str, bool>::new();
+    let mut cache = HashMap::<&str, u64>::new();
 
-    let pt1 = pattern_lines
+    let mut pt1 = 0;
+    let pt2 = pattern_lines
         .lines()
-        .map(|line| pattern_is_possible(line, &towels, &mut cache))
-        .filter(|b| *b)
-        .count();
+        .map(|line| {
+            let combinations = pattern_count_combinations(line, &towels, &mut cache);
+            if combinations > 0 {
+                pt1 += 1;
+            }
+            combinations
+        })
+        .sum();
 
-    (pt1 as u64, 0)
+    (pt1, pt2)
 }
 
 #[cfg(test)]
@@ -64,6 +66,6 @@ mod test {
         let input = include_str!("../../inputs/19.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 6);
-        assert_eq!(pt2, 0);
+        assert_eq!(pt2, 16);
     }
 }
