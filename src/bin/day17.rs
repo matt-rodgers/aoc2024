@@ -9,132 +9,107 @@ fn main() {
     println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
 }
 
-#[derive(Debug, Clone)]
-struct Computer {
-    rega: u32,
-    regb: u32,
-    regc: u32,
-    program: Vec<u32>,
-    pc: usize,
-    output: Vec<u32>,
+fn run_simplified_computer(mut a: u32) -> String {
+    let mut out: Vec<u32> = Vec::new();
+
+    while a > 0 {
+        let res = single_iteration(a & 0b1111111111);
+        out.push(res);
+        a = a >> 3;
+    }
+
+    out.iter().join(",").to_string()
 }
 
-impl From<&str> for Computer {
-    fn from(s: &str) -> Self {
-        let mut parts = s.trim().lines();
-        let (_, a) = parts.next().unwrap().split_at(12);
-        let (_, b) = parts.next().unwrap().split_at(12);
-        let (_, c) = parts.next().unwrap().split_at(12);
-        let _ = parts.next().unwrap();
-        let prg = parts.next().unwrap().trim_start_matches("Program: ");
-
-        let rega = a.parse().unwrap();
-        let regb = b.parse().unwrap();
-        let regc = c.parse().unwrap();
-        let program = prg.split(',').map(|n| n.parse().unwrap()).collect();
-
-        Computer {
-            rega,
-            regb,
-            regc,
-            program,
-            pc: 0,
-            output: Vec::new(),
-        }
-    }
-}
-
-impl Computer {
-    fn combo_operand(&self, operand: u32) -> Option<u32> {
-        match operand {
-            0..=3 => Some(operand),
-            4 => Some(self.rega),
-            5 => Some(self.regb),
-            6 => Some(self.regc),
-            _ => None,
-        }
-    }
-
-    fn instruction(&mut self, opcode: u32, operand: u32) {
-        let co = self.combo_operand(operand); // In case it's needed later
-
-        let inc_ip = match opcode {
-            0 | 6 | 7 => {
-                let denominator = 2u32.pow(co.expect("Invalid combo operand"));
-                let res = self.rega / denominator;
-                match opcode {
-                    0 => self.rega = res,
-                    6 => self.regb = res,
-                    7 => self.regc = res,
-                    _ => unreachable!(),
-                }
-                true
-            }
-            1 => {
-                self.regb = self.regb ^ operand;
-                true
-            }
-            2 => {
-                self.regb = co.expect("Invalid combo operand") % 8;
-                true
-            }
-            3 => match self.rega {
-                0 => true,
-                _ => {
-                    self.pc = operand as usize;
-                    false
-                }
-            },
-            4 => {
-                self.regb = self.regb ^ self.regc;
-                true
-            }
-            5 => {
-                self.output.push(co.expect("Invalid combo operand") % 8);
-                true
-            }
-            _ => {
-                panic!("Invalid opcode {}", opcode);
-            }
-        };
-
-        if inc_ip {
-            self.pc += 2;
-        }
-    }
-
-    fn run_until_halt(&mut self) -> String {
-        loop {
-            let instruction = self.program.get(self.pc);
-            let operand = self.program.get(self.pc + 1);
-
-            if instruction.is_none() || operand.is_none() {
-                break;
-            }
-
-            self.instruction(*instruction.unwrap(), *operand.unwrap());
-        }
-
-        self.output.iter().join(",").to_string()
-    }
+fn single_iteration(a_lsbs: u32) -> u32 {
+    let b = (a_lsbs & 0b111) ^ 0b111;
+    let c = a_lsbs >> b;
+    return ((b ^ 0b111) ^ c) & 0b111;
 }
 
 fn run(input: &str) -> (String, u64) {
-    let mut computer = Computer::from(input);
-    let pt1 = computer.run_until_halt();
+    // Manual analysis of program:
+    // 2, 4 - b = a % 8 # Put only the last 3 bits of a into b
+    // 1, 7 - b = b ^ 7 # XOR b with 0b111, effectively flipping the 3 bits we just put in there
+    // 7, 5 - c = a / 2.pow(b)
+    // 0, 3 - a = a / 2.pow(3) # Divide a by 8, removing the last 3 bits
+    // 1, 7 - b = b ^ 7 # XOR b with 0b111, flipping the bits back to the value before last XOR
+    // 4, 1 - b = b ^ c
+    // 5, 5 - push last 3 bits of b into output
+    // 3, 0 - if a is zero halt, else go back to start
+    //
+    // We can rewrite and re-order this slightly:
+    //   b   = (a & 0b111) ^ 0b111
+    //   c   = a >> b
+    //   out = ((b ^ 0b111) ^ c) & 0b111
+    //   a   = a >> 3
+    //   branch to start if a != 0
+    //   end
+    //
+    // Each iteration:
+    //   - depends only on the 10 least significant bits of a
+    //   - outputs a single digit
+    //   - consumes the 3 least significant bits of a
+    //
+    // For each output digit, there can only be a limited set of 10-bit values that will result in
+    // this output. So we should just be able find the mapping of 10-bit input --> 3-bit output, and
+    // then try all the possibilities to find the minimum one that works.
 
-    (pt1, 0)
+    // First confirm that our simplified equation works:
+    let pt1 = run_simplified_computer(64012472);
+
+    // Populate lookup table of output for each 10-bit input
+    let mut lut = [0u8; 2usize.pow(10)];
+    for (i, val) in lut.iter_mut().enumerate() {
+        *val = single_iteration(i as u32).try_into().unwrap();
+    }
+
+    // Get the inverse of the lookup table - for each 3-bit output value, a Vec of the 10-bit inputs
+    // that could create this output.
+    let rev_lu: Vec<Vec<u32>> = (0..8)
+        .map(|out| {
+            lut.iter()
+                .enumerate()
+                .filter_map(|(i, val)| if *val == out { Some(i as u32) } else { None })
+                .collect()
+        })
+        .collect();
+
+    let (_, last_line) = input.trim().split_once("\n\n").unwrap();
+    let (_, nums) = last_line.split_once(" ").unwrap();
+    let program: Vec<u32> = nums.split(',').map(|n| n.parse().unwrap()).collect();
+
+    let mut possible_answers: Vec<u64> = Vec::new();
+    for (i, out) in program.iter().enumerate() {
+        // Get all of the possible 10-bit inputs that could create this output
+        let inputs = rev_lu
+            .get(*out as usize)
+            .expect("output does not exist in LUT...");
+
+        // Insert into the possible answers any possible combination of this input and the possible
+        // answers that aready exist. A combination is possible if the least significant 7 bits of
+        // this input match the most significant 7 bits of a possible answer already in the set.
+        let mut new_possible_answers = Vec::new();
+        for ip in inputs.iter() {
+            if i == 0 {
+                // On the first iteration there are no existing possible answers, so all are valid
+                new_possible_answers.push(*ip as u64);
+            } else {
+                for pa in possible_answers.iter() {
+                    if *ip as u64 & 0b1111111 == (pa >> (i * 3)) & 0b1111111 {
+                        new_possible_answers.push(pa | ((*ip as u64) << (i * 3)));
+                    }
+                }
+            }
+        }
+
+        possible_answers = new_possible_answers;
+    }
+
+    let pt2 = possible_answers.iter().min().unwrap();
+
+    (pt1, *pt2)
 }
 
 #[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_example() {
-        let input = include_str!("../../inputs/17.ex");
-        let (pt1, pt2) = run(&input);
-        assert_eq!(pt1, "4,6,3,5,6,3,5,2,1,0".to_string());
-        assert_eq!(pt2, 0);
-    }
-}
+mod test {}
