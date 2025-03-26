@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 
 fn main() {
     let input = include_str!("../../inputs/21.in");
@@ -16,17 +16,27 @@ fn run(input: &str) -> (u64, u64) {
         .collect();
 
     let mut pt1 = 0;
+    let mut pt2 = 0;
+
+    let mut cache = HashMap::new();
 
     for (n, chars) in codes {
-        let seq = seq_numeric(&chars);
-        let seq = seq_directional(&seq);
-        let seq = seq_directional(&seq);
-
-        let complexity = seq.len() as u64 * n;
-        pt1 += complexity;
+        pt1 += run_one_sequence(n, &chars, 2, &mut cache);
+        pt2 += run_one_sequence(n, &chars, 25, &mut cache);
     }
 
-    (pt1, 0)
+    (pt1, pt2)
+}
+
+fn run_one_sequence(
+    n: u64,
+    chars: &Vec<char>,
+    directional_keypads: u32,
+    cache: &mut HashMap<(Vec<char>, u32), u64>,
+) -> u64 {
+    let seq = seq_numeric(&chars);
+    let l = directional_recurse(seq, directional_keypads, cache);
+    l * n
 }
 
 fn numeric_pos(c: char) -> (isize, isize) {
@@ -206,17 +216,33 @@ fn seq_numeric(ip: &[char]) -> Vec<char> {
     out
 }
 
-fn seq_directional(ip: &[char]) -> Vec<char> {
+fn directional_recurse(
+    ip: Vec<char>,
+    depth: u32,
+    cache: &mut HashMap<(Vec<char>, u32), u64>,
+) -> u64 {
+    if let Some(res) = cache.get(&(ip.clone(), depth)) {
+        return *res;
+    }
+
     let mut current = 'A';
-    let mut out = Vec::new();
+    let mut res = 0;
 
     for c in ip.iter() {
-        let next_seq = move_directional(current, *c);
-        out.extend_from_slice(&next_seq);
+        let seq = move_directional(current, *c);
+
+        if depth == 1 {
+            res += seq.len() as u64;
+        } else {
+            res += directional_recurse(seq, depth - 1, cache);
+        }
+
         current = *c;
     }
 
-    out
+    cache.insert((ip, depth), res);
+
+    res
 }
 
 #[cfg(test)]
@@ -226,9 +252,8 @@ mod test {
     #[test]
     fn test_example() {
         let input = include_str!("../../inputs/21.ex");
-        let (pt1, pt2) = run(&input);
+        let (pt1, _pt2) = run(&input);
         assert_eq!(pt1, 126384);
-        assert_eq!(pt2, 0);
     }
 
     #[test]
@@ -255,12 +280,5 @@ mod test {
         let input: Vec<char> = "029A".chars().collect();
         let seq = seq_numeric(&input);
         assert_eq!(seq.len(), "<A^A>^^AvvvA".len());
-    }
-
-    #[test]
-    fn test_seq_directional() {
-        let input: Vec<char> = "<A^A>^^AvvvA".chars().collect();
-        let seq = seq_directional(&input);
-        assert_eq!(seq.len(), "v<<A>>^A<A>AvA<^AA>A<vAAA>^A".len());
     }
 }
