@@ -1,4 +1,3 @@
-
 pub struct NeighborIter {
     idx: usize,
     vals: [Option<(usize, usize)>; 4],
@@ -49,7 +48,7 @@ impl Iterator for NeighborIter {
 mod tests {
     use super::*;
     use std::fmt::Debug;
-    
+
     fn assert_equal_unordered<T>(mut a: Vec<T>, mut b: Vec<T>)
     where
         T: Ord + Debug,
