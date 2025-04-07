@@ -1,11 +1,11 @@
 use std::{collections::HashSet, time::Instant};
 
-fn main() {
-    let input = include_str!("../../inputs/14.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/14.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 #[derive(Debug, Clone)]
@@ -61,6 +61,7 @@ fn count_positions_in_range(
         .sum()
 }
 
+#[allow(unused)]
 fn display_robots(positions: &Vec<(isize, isize)>) {
     let mut minx = isize::MAX;
     let mut miny = isize::MAX;
@@ -127,7 +128,7 @@ fn run_inner(input: &str, steps: isize, bounds: (isize, isize)) -> (u64, u64) {
 
         if end_positions.len() == HashSet::<&(isize, isize)>::from_iter(end_positions.iter()).len()
         {
-            display_robots(&end_positions);
+            // display_robots(&end_positions);
             pt2 = i as u64;
             break;
         }
@@ -146,7 +147,7 @@ mod test {
 
     #[test]
     fn test_example() {
-        let input = include_str!("../../inputs/14.ex");
+        let input = include_str!("../inputs/14.ex");
         let (pt1, pt2) = run_inner(&input, 100, (11, 7));
         assert_eq!(pt1, 12);
         assert_eq!(pt2, 0);

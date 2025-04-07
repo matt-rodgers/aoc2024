@@ -3,12 +3,12 @@ use std::time::Instant;
 
 use itertools::Itertools;
 
-fn main() {
-    let input = include_str!("../../inputs/24.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/24.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -215,14 +215,14 @@ mod test {
 
     #[test]
     fn test_example() {
-        let input = include_str!("../../inputs/24.ex");
+        let input = include_str!("../inputs/24.ex");
         let (pt1, _pt2) = run(&input);
         assert_eq!(pt1, 4);
     }
 
     #[test]
     fn test_example_2() {
-        let input = include_str!("../../inputs/24_2.ex");
+        let input = include_str!("../inputs/24_2.ex");
         let (pt1, _pt2) = run(&input);
         assert_eq!(pt1, 2024);
     }

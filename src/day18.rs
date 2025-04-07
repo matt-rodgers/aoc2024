@@ -1,15 +1,13 @@
+use crate::neighbor;
+use priority_queue::PriorityQueue;
 use std::{cmp::Reverse, collections::HashSet, time::Instant};
 
-use priority_queue::PriorityQueue;
-
-mod neighbor;
-
-fn main() {
-    let input = include_str!("../../inputs/18.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/18.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 fn run(input: &str) -> (u64, String) {
@@ -40,7 +38,7 @@ fn shortest_path(
 
     // Dijkstra
     while let Some((current, Reverse(cost))) = unvisited.pop() {
-        // Break if only unreachable nodes are remaining
+        // Break if only unreachable nodes are rerun_outer() -> Stringing
         if cost == usize::MAX {
             break;
         }
@@ -85,7 +83,6 @@ fn run_inner(input: &str, max_dim: usize, sim_limit: usize) -> (u64, String) {
 
     while low < high {
         let mid = (low + high) / 2;
-        println!("low: {}, mid: {}, high: {}", low, mid, high);
 
         if let Some(_) = shortest_path(&all_positions, max_dim, mid) {
             // Possible to reach end, look again in high side
@@ -114,7 +111,7 @@ mod test {
 
     #[test]
     fn test_example() {
-        let input = include_str!("../../inputs/18.ex");
+        let input = include_str!("../inputs/18.ex");
         let (pt1, pt2) = run_inner(&input, 6, 12);
         assert_eq!(pt1, 22);
         assert_eq!(pt2, "6,1");

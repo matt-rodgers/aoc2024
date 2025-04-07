@@ -1,12 +1,12 @@
 use rayon::prelude::*;
 use std::{collections::HashSet, fmt::Display, time::Instant};
 
-fn main() {
-    let input = include_str!("../../inputs/06.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/06.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -253,7 +253,7 @@ mod test {
 
     #[test]
     fn test_example() {
-        let input = include_str!("../../inputs/06.ex");
+        let input = include_str!("../inputs/06.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 41);
         assert_eq!(pt2, 6);

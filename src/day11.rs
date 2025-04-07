@@ -1,11 +1,11 @@
 use std::{collections::HashMap, time::Instant};
 
-fn main() {
-    let input = include_str!("../../inputs/11.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/11.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 fn run(input: &str) -> (u64, u64) {
@@ -92,7 +92,7 @@ mod test {
 
     #[test]
     fn test_example() {
-        let input = include_str!("../../inputs/11.ex");
+        let input = include_str!("../inputs/11.ex");
         let (pt1, _pt2) = run(&input);
         assert_eq!(pt1, 55312);
     }

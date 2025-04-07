@@ -5,12 +5,12 @@ use std::{
     time::Instant,
 };
 
-fn main() {
-    let input = include_str!("../../inputs/08.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/08.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 fn is_in_arena(pt: (isize, isize), max: (isize, isize)) -> bool {
@@ -104,7 +104,7 @@ mod test {
 
     #[test]
     fn test_example() {
-        let input = include_str!("../../inputs/08.ex");
+        let input = include_str!("../inputs/08.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 14);
         assert_eq!(pt2, 34);

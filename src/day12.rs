@@ -5,12 +5,12 @@ use std::{
     time::Instant,
 };
 
-fn main() {
-    let input = include_str!("../../inputs/12.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/12.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -179,7 +179,7 @@ mod test {
 
     #[test]
     fn test_flood_one_area() {
-        let input = include_str!("../../inputs/12.ex");
+        let input = include_str!("../inputs/12.ex");
         let points = parse_input(&input);
         let mut unvisited = points.clone();
 
@@ -204,7 +204,7 @@ mod test {
 
     #[test]
     fn test_example_1() {
-        let input = include_str!("../../inputs/12.ex");
+        let input = include_str!("../inputs/12.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 140);
         assert_eq!(pt2, 80);
@@ -212,7 +212,7 @@ mod test {
 
     #[test]
     fn test_example_2() {
-        let input = include_str!("../../inputs/12_2.ex");
+        let input = include_str!("../inputs/12_2.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 772);
         assert_eq!(pt2, 436);
@@ -220,7 +220,7 @@ mod test {
 
     #[test]
     fn test_example_3() {
-        let input = include_str!("../../inputs/12_3.ex");
+        let input = include_str!("../inputs/12_3.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 1930);
         assert_eq!(pt2, 1206);
@@ -228,14 +228,14 @@ mod test {
 
     #[test]
     fn test_example_4() {
-        let input = include_str!("../../inputs/12_4.ex");
+        let input = include_str!("../inputs/12_4.ex");
         let (_pt1, pt2) = run(&input);
         assert_eq!(pt2, 236);
     }
 
     #[test]
     fn test_example_5() {
-        let input = include_str!("../../inputs/12_5.ex");
+        let input = include_str!("../inputs/12_5.ex");
         let (_pt1, pt2) = run(&input);
         assert_eq!(pt2, 368);
     }

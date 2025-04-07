@@ -4,12 +4,12 @@ use std::time::Instant;
 
 static REGEX: OnceLock<Regex> = OnceLock::new();
 
-fn main() {
-    let input = include_str!("../../inputs/03.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/03.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 fn sum_mul_instructions(ip: &str) -> u64 {
@@ -99,14 +99,14 @@ mod test {
 
     #[test]
     fn test_example() {
-        let input = include_str!("../../inputs/03.ex");
+        let input = include_str!("../inputs/03.ex");
         let (pt1, _pt2) = run(&input);
         assert_eq!(pt1, 161);
     }
 
     #[test]
     fn test_example2() {
-        let input = include_str!("../../inputs/03_2.ex");
+        let input = include_str!("../inputs/03_2.ex");
         let (_pt1, pt2) = run(&input);
         assert_eq!(pt2, 48);
     }

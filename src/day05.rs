@@ -3,12 +3,12 @@ use std::{
     time::Instant,
 };
 
-fn main() {
-    let input = include_str!("../../inputs/05.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/05.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 /// Return true if the update is valid
@@ -42,7 +42,7 @@ fn rearrange_update(
     let mut i: usize = start_from;
 
     while i < update.len() {
-        // For each remaining item in the slice, first get any associated rules
+        // For each rerun_outer() -> Stringing item in the slice, first get any associated rules
         let hs = match rules.get(&new_update[i]) {
             None => {
                 i += 1;
@@ -158,7 +158,7 @@ mod test {
 
     #[test]
     fn test_example() {
-        let input = include_str!("../../inputs/05.ex");
+        let input = include_str!("../inputs/05.ex");
         let (pt1, pt2) = run(&input);
         assert_eq!(pt1, 143);
         assert_eq!(pt2, 123);
@@ -166,7 +166,7 @@ mod test {
 
     #[test]
     fn test_update_is_valid() {
-        let input = include_str!("../../inputs/05.ex");
+        let input = include_str!("../inputs/05.ex");
         let (rules, _updates) = get_rules_and_updates(input);
 
         // This update is valid
@@ -182,7 +182,7 @@ mod test {
 
     #[test]
     fn test_rearrange_update() {
-        let input = include_str!("../../inputs/05.ex");
+        let input = include_str!("../inputs/05.ex");
         let (rules, _updates) = get_rules_and_updates(input);
 
         let update = vec![75, 97, 47, 61, 53];

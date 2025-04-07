@@ -1,12 +1,12 @@
 use itertools::Itertools;
 use std::time::Instant;
 
-fn main() {
-    let input = include_str!("../../inputs/17.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/17.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 fn run_simplified_computer(mut a: u32) -> String {

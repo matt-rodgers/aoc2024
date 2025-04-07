@@ -1,15 +1,13 @@
-use neighbor::NeighborIter;
+use crate::neighbor::NeighborIter;
 use priority_queue::PriorityQueue;
 use std::{cmp::Reverse, collections::HashMap, time::Instant};
 
-mod neighbor;
-
-fn main() {
-    let input = include_str!("../../inputs/20.in");
+pub fn run_outer() -> String {
+    let input = include_str!("../inputs/20.in");
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    println!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed);
+    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
 }
 
 fn run(input: &str) -> (u64, u64) {
@@ -49,7 +47,7 @@ fn run_inner(input: &str, cheat_time: usize, threshold: u32) -> u64 {
     let mut visited: HashMap<(usize, usize), u32> = HashMap::new();
 
     while let Some((current, Reverse(cost))) = unvisited.pop() {
-        // Break if all remaining nodes are unreachable
+        // Break if all rerun_outer() -> Stringing nodes are unreachable
         if cost == u32::MAX {
             break;
         }
@@ -132,7 +130,7 @@ mod test {
 
     #[test]
     fn test_example() {
-        let input = include_str!("../../inputs/20.ex");
+        let input = include_str!("../inputs/20.ex");
         let pt1 = run_inner(&input, 2, 10);
         assert_eq!(pt1, 10);
 
