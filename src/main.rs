@@ -68,6 +68,8 @@ const DAYS: [fn() -> String; 25] = [
     day25::run_outer,
 ];
 
+// const RUN_ORDER
+
 fn main() {
     let args = Args::parse();
 

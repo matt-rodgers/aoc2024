@@ -7,7 +7,12 @@ pub fn run_outer() -> String {
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
+    format!(
+        "pt1: {} , pt2: {} , elapsed time {:?} us",
+        pt1,
+        pt2,
+        elapsed.as_micros()
+    )
 }
 
 fn run(input: &str) -> (u64, u64) {
@@ -24,17 +29,28 @@ fn run(input: &str) -> (u64, u64) {
         .map(|seq| *seq.last().unwrap() as u64)
         .sum();
 
-    let mut overall_hm: HashMap<Vec<i32>, u32> = HashMap::new();
+    // The HashMap key is effectively a sequence of four diffs, for which each diff must be between
+    // -9 to +9. But storing this in a Vec is not very efficient, so instead we can encode it by
+    // adding 9 to each diff (to make sure it is non-negative), and storing the result in a u32 with
+    // each consecutive value left-shifted by 8 bits relative to the last one (we could actually left
+    // shift by less than 8 bits but 8 makes things easier to debug since each diff is in its own set
+    // of two bytes).
+    let mut overall_hm: HashMap<u32, u32> = HashMap::new();
 
     for seq in sequences {
-        let mut hm: HashMap<Vec<i32>, u32> = HashMap::new();
+        let mut hm: HashMap<u32, u32> = HashMap::new();
 
         for w in seq.windows(5) {
             let price = w[4] % 10;
-            let diffs: Vec<i32> = w
+            let diffs: u32 = w
                 .windows(2)
-                .map(|a| (a[1] % 10) as i32 - (a[0] % 10) as i32)
-                .collect();
+                .enumerate()
+                .map(|(i, a)| {
+                    let diff = (a[1] % 10) as i32 - (a[0] % 10) as i32;
+                    let diff_nonnegative = (diff + 9) as u32;
+                    diff_nonnegative << (8 * i)
+                })
+                .sum();
 
             // Only the first occurrence of any sequence is relevant
             if !hm.contains_key(&diffs) {

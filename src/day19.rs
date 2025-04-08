@@ -5,7 +5,12 @@ pub fn run_outer() -> String {
     let start = Instant::now();
     let (pt1, pt2) = run(&input);
     let elapsed = Instant::now() - start;
-    format!("pt1: {} , pt2: {} , elapsed time {:?}", pt1, pt2, elapsed)
+    format!(
+        "pt1: {} , pt2: {} , elapsed time {:?} us",
+        pt1,
+        pt2,
+        elapsed.as_micros()
+    )
 }
 
 fn pattern_count_combinations<'a>(
